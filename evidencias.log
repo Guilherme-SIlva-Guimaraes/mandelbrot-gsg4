@@ -1,0 +1,150 @@
+Script started on 2026-08-29 18:16:02-03:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="171" LINES="12"]
+[?2004h]0;guilherme@pc: ~/gsg4[01;32mguilherme@pc[00m:[01;34m~/gsg4[00m$ [7mdate[27m
+[7mmake clean[27m
+[7mmake[27m
+[7mdate[27m
+[7m./mandelbrot 100 40 200 4[27m
+[7mdate[27m
+[7mcat times.txt[27m
+[7mls -la[27m
+[7mexit[27m[A[A[A[A[A[A[A[A]0;guilherme@pc: ~/gsg4[01;32mguilherme@pc[00m:[01;34m~/gsg4[00m$ date
+make clean
+make
+date
+./mandelbrot 100 40 200 4
+date
+cat times.txt
+ls -la
+exit
+[?2004lSat Aug 29 18:16:14 -03 2026
+rm -f mandelbrot *.pgm times.txt
+gcc -Wall -Wextra -O2 -o mandelbrot mandelbrot.c -fopenmp -pthread -lm
+Sat Aug 29 18:16:15 -03 2026
+Sat Aug 29 18:16:15 -03 2026
+Serial: 0.000168 s
+total 72
+drwxr-xr-x  3 guilherme guilherme  4096 Aug 29 18:16 [0m[01;34m.[0m
+drwxr-xr-x 12 guilherme guilherme  4096 Aug 29 18:01 [01;34m..[0m
+drwxr-xr-x  8 guilherme guilherme  4096 Aug 29 17:58 [01;34m.git[0m
+-rw-r--r--  1 guilherme guilherme   264 Aug 29 18:00 Makefile
+-rw-r--r--  1 guilherme guilherme    17 Aug 29 01:04 README.md
+-rw-r--r--  1 guilherme guilherme     0 Aug 29 18:16 evidencias.log
+-rwxr-xr-x  1 guilherme guilherme 17120 Aug 29 18:16 [01;32mmandelbrot[0m
+-rw-r--r--  1 guilherme guilherme  4613 Aug 29 18:14 mandelbrot.c
+-rw-r--r--  1 guilherme guilherme   788 Aug 29 18:14 mandelbrot.h
+-rw-r--r--  1 guilherme guilherme 15997 Aug 29 18:16 [01;35mmandelbrot_gsg4_serial.pgm[0m
+-rw-r--r--  1 guilherme guilherme    19 Aug 29 18:16 times.txt
+exit
+
+Script done on 2026-08-29 18:16:15-03:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2026-08-29 18:25:24-03:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="177" LINES="12"]
+[?2004h]0;guilherme@pc: ~/gsg4[01;32mguilherme@pc[00m:[01;34m~/gsg4[00m$ date
+cat mandelbrot.h
+echo "---"
+make clean
+[7mmake[27m
+[7mdate[27m
+[7m./mandelbrot 100 40 200 4[27m
+[7mdate[27m
+[7mcat times.txt[27m
+[7mecho "--- ASCII art de verificacao ---"[27m
+[7mawk '{for(i=1;i<=NF;i++){v=$i; c=" "; if(v>240)c="@"; else if(v>150)c="#"; else if(v>80)c="+"; else if(v>20)c="."; printf "%s",c} print ""}' mandelbrot_gsg4_serial.pgm[27m
+[7mecho "--- validacao de erro ---"[27m
+[7m./mandelbrot[27m[7m./mandelbrot -10 100 100 4[27m[7m./mandelbrot abc 100 100 4[27m[7mexit[27m[A[A[A[A[A[A[A[Amake
+date
+./mandelbrot 100 40 200 4
+date
+cat times.txt
+echo "--- ASCII art de verificacao ---"
+awk '{for(i=1;i<=NF;i++){v=$i; c=" "; if(v>240)c="@"; else if(v>150)c="#"; else if(v>80)c="+"; else if(v>20)c="."; printf "%s",c} print ""}' mandelbrot_gsg4_serial.pgm
+echo "--- validacao de erro ---"
+./mandelbrot./mandelbrot -10 100 100 4./mandelbrot abc 100 100 4exit
+[?2004lSat Aug 29 18:25:33 -03 2026
+#ifndef MANDELBROT_H
+#define MANDELBROT_H
+
+#define RE_MIN -2.0
+#define RE_MAX  1.0
+#define IM_MIN -1.5
+#define IM_MAX  1.5
+
+typedef struct {
+    int largura;
+    int altura;
+    int max_iteracoes;
+    int num_threads;
+    char login[64];
+} Config;
+
+typedef struct {
+    unsigned char *pixels;
+    int largura;
+    int altura;
+} Imagem;
+
+void pixel_para_complexo(int px, int py, const Config *cfg,
+                          double *cr, double *ci);
+int mandelbrot_iteracoes(double cr, double ci, int max_iteracoes);
+unsigned char normaliza_intensidade(int iteracoes, int max_iteracoes);
+
+Imagem *imagem_criar(int largura, int altura);
+void imagem_destruir(Imagem *img);
+
+void calcula_serial(Imagem *img, const Config *cfg);
+
+int escreve_pgm(const char *caminho, const Imagem *img);
+
+#endif---
+rm -f mandelbrot *.pgm times.txt
+gcc -Wall -Wextra -O2 -o mandelbrot mandelbrot.c -fopenmp -pthread -lm
+Sat Aug 29 18:25:34 -03 2026
+Sat Aug 29 18:25:34 -03 2026
+Serial: 0.000539 s
+--- ASCII art de verificacao ---
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                             .                                      
+                                                               .                                    
+                                                             .+..                                   
+                                                          .@@@@@@..                                 
+                                                          +@@@@@@@                                  
+                                               ..    .. +....@@+.+... ..                            
+                                               .#@@..@@@@@@@@@@@@@@@@@@@+ .@...                     
+                                               .+@@@@@@@@@@@@@@@@@@@@@@@@@@@@.                      
+                                            .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.                      
+                         .                 +@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+.                  
+                           .@+...@...     .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.                    
+                        .  +@@@@@@@@@@@.  .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.                    
+                         +@@@@@@@@@@@@@@@.@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#                     
+                 .  .#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                       
+                 .  .#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                       
+                         +@@@@@@@@@@@@@@@.@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#                     
+                        .  +@@@@@@@@@@@.  .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.                    
+                           .@+...@...     .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.                    
+                         .                 +@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+.                  
+                                            .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.                      
+                                               .+@@@@@@@@@@@@@@@@@@@@@@@@@@@@.                      
+                                               .#@@..@@@@@@@@@@@@@@@@@@@+ .@...                     
+                                               ..    .. +....@@+.+... ..                            
+                                                          +@@@@@@@                                  
+                                                          .@@@@@@..                                 
+                                                             .+..                                   
+                                                               .                                    
+                                                             .                                      
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+--- validacao de erro ---
+Uso: ./mandelbrot [largura] [altura] [max_iteracoes] [num_threads]
+Erro: largura invalida '-10'
+Erro: largura invalida 'abc'
+exit
+
+Script done on 2026-08-29 18:25:34-03:00 [COMMAND_EXIT_CODE="1"]
