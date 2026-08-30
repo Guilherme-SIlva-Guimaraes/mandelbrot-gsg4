@@ -4,6 +4,7 @@
 #include <math.h>
 #include <time.h>
 #include <omp.h>
+#include <pthread.h>
 #include "mandelbrot.h"
 
 void pixel_para_complexo(int px, int py, const Config *cfg,
@@ -81,6 +82,76 @@ void calcula_openmp(Imagem *img, const Config *cfg) {
     }
 }
 
+typedef struct {
+    Imagem *img;
+    const Config *cfg;
+    int linha_inicio;
+    int linha_fim;
+} ArgThreadEstatico;
+
+static void *thread_func_estatico(void *arg) {
+    ArgThreadEstatico *a = (ArgThreadEstatico *)arg;
+
+    for (int py = a->linha_inicio; py < a->linha_fim; py++) {
+        for (int px = 0; px < a->img->largura; px++) {
+            double cr, ci;
+            pixel_para_complexo(px, py, a->cfg, &cr, &ci);
+            int it = mandelbrot_iteracoes(cr, ci, a->cfg->max_iteracoes);
+            a->img->pixels[py * a->img->largura + px] =
+                normaliza_intensidade(it, a->cfg->max_iteracoes);
+        }
+    }
+
+    return NULL;
+}
+
+void calcula_pthreads1(Imagem *img, const Config *cfg) {
+    int n = cfg->num_threads;
+    if (n > img->altura) n = img->altura;
+    if (n < 1) n = 1;
+
+    pthread_t *threads = malloc(n * sizeof(pthread_t));
+    ArgThreadEstatico *args = malloc(n * sizeof(ArgThreadEstatico));
+
+    if (!threads || !args) {
+        fprintf(stderr, "Erro: falha na alocacao de memoria para threads (pthreads1)\n");
+        free(threads);
+        free(args);
+        return;
+    }
+
+    int linhas_por_thread = img->altura / n;
+    int resto = img->altura % n;
+    int linha_atual = 0;
+
+    for (int i = 0; i < n; i++) {
+        int bloco = linhas_por_thread + (i < resto ? 1 : 0);
+
+        args[i].img = img;
+        args[i].cfg = cfg;
+        args[i].linha_inicio = linha_atual;
+        args[i].linha_fim = linha_atual + bloco;
+        linha_atual += bloco;
+
+        if (pthread_create(&threads[i], NULL, thread_func_estatico, &args[i]) != 0) {
+            fprintf(stderr, "Erro: falha ao criar thread %d (pthreads1)\n", i);
+            for (int j = 0; j < i; j++) {
+                pthread_join(threads[j], NULL);
+            }
+            free(threads);
+            free(args);
+            return;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    free(threads);
+    free(args);
+}
+
 int escreve_pgm(const char *caminho, const Imagem *img) {
     FILE *f = fopen(caminho, "w");
     if (!f) {
@@ -151,7 +222,6 @@ int main(int argc, char *argv[]) {
 
     struct timespec t0, t1;
 
-    /* --- Serial --- */
     clock_gettime(CLOCK_MONOTONIC, &t0);
     calcula_serial(img, &cfg);
     clock_gettime(CLOCK_MONOTONIC, &t1);
@@ -166,7 +236,6 @@ int main(int argc, char *argv[]) {
     }
     fprintf(ftimes, "Serial: %.6f s\n", tempo_serial);
 
-    /* --- OpenMP --- */
     clock_gettime(CLOCK_MONOTONIC, &t0);
     calcula_openmp(img, &cfg);
     clock_gettime(CLOCK_MONOTONIC, &t1);
@@ -180,6 +249,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     fprintf(ftimes, "OpenMP: %.6f s\n", tempo_openmp);
+
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    calcula_pthreads1(img, &cfg);
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    double tempo_pthreads1 = (t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) / 1e9;
+
+    char nome_pthreads1[128];
+    snprintf(nome_pthreads1, sizeof(nome_pthreads1), "mandelbrot_%s_pthreads1.pgm", cfg.login);
+    if (escreve_pgm(nome_pthreads1, img) != 0) {
+        imagem_destruir(img);
+        fclose(ftimes);
+        return 1;
+    }
+    fprintf(ftimes, "Pthreads1: %.6f s\n", tempo_pthreads1);
 
     fclose(ftimes);
     imagem_destruir(img);

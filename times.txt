@@ -1,2 +1,3 @@
-Serial: 0.555646 s
-OpenMP: 0.073569 s
+Serial: 0.001685 s
+OpenMP: 0.003196 s
+Pthreads1: 0.001822 s
