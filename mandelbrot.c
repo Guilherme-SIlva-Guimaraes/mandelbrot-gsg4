@@ -152,6 +152,89 @@ void calcula_pthreads1(Imagem *img, const Config *cfg) {
     free(args);
 }
 
+typedef struct {
+    Imagem *img;
+    const Config *cfg;
+    int *proxima_linha;
+    pthread_mutex_t *mutex;
+} ArgThreadDinamico;
+
+static void *thread_func_dinamico(void *arg) {
+    ArgThreadDinamico *a = (ArgThreadDinamico *)arg;
+
+    while (1) {
+        pthread_mutex_lock(a->mutex);
+        int py = *(a->proxima_linha);
+        if (py < a->img->altura) {
+            (*(a->proxima_linha))++;
+        }
+        pthread_mutex_unlock(a->mutex);
+
+        if (py >= a->img->altura) break;
+
+        for (int px = 0; px < a->img->largura; px++) {
+            double cr, ci;
+            pixel_para_complexo(px, py, a->cfg, &cr, &ci);
+            int it = mandelbrot_iteracoes(cr, ci, a->cfg->max_iteracoes);
+            a->img->pixels[py * a->img->largura + px] =
+                normaliza_intensidade(it, a->cfg->max_iteracoes);
+        }
+    }
+
+    return NULL;
+}
+
+void calcula_pthreads2(Imagem *img, const Config *cfg) {
+    int n = cfg->num_threads;
+    if (n > img->altura) n = img->altura;
+    if (n < 1) n = 1;
+
+    pthread_t *threads = malloc(n * sizeof(pthread_t));
+    ArgThreadDinamico *args = malloc(n * sizeof(ArgThreadDinamico));
+
+    if (!threads || !args) {
+        fprintf(stderr, "Erro: falha na alocacao de memoria para threads (pthreads2)\n");
+        free(threads);
+        free(args);
+        return;
+    }
+
+    int proxima_linha = 0;
+    pthread_mutex_t mutex;
+    if (pthread_mutex_init(&mutex, NULL) != 0) {
+        fprintf(stderr, "Erro: falha ao inicializar mutex (pthreads2)\n");
+        free(threads);
+        free(args);
+        return;
+    }
+
+    for (int i = 0; i < n; i++) {
+        args[i].img = img;
+        args[i].cfg = cfg;
+        args[i].proxima_linha = &proxima_linha;
+        args[i].mutex = &mutex;
+
+        if (pthread_create(&threads[i], NULL, thread_func_dinamico, &args[i]) != 0) {
+            fprintf(stderr, "Erro: falha ao criar thread %d (pthreads2)\n", i);
+            for (int j = 0; j < i; j++) {
+                pthread_join(threads[j], NULL);
+            }
+            pthread_mutex_destroy(&mutex);
+            free(threads);
+            free(args);
+            return;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    pthread_mutex_destroy(&mutex);
+    free(threads);
+    free(args);
+}
+
 int escreve_pgm(const char *caminho, const Imagem *img) {
     FILE *f = fopen(caminho, "w");
     if (!f) {
@@ -263,6 +346,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     fprintf(ftimes, "Pthreads1: %.6f s\n", tempo_pthreads1);
+
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    calcula_pthreads2(img, &cfg);
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    double tempo_pthreads2 = (t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) / 1e9;
+
+    char nome_pthreads2[128];
+    snprintf(nome_pthreads2, sizeof(nome_pthreads2), "mandelbrot_%s_pthreads2.pgm", cfg.login);
+    if (escreve_pgm(nome_pthreads2, img) != 0) {
+        imagem_destruir(img);
+        fclose(ftimes);
+        return 1;
+    }
+    fprintf(ftimes, "Pthreads2: %.6f s\n", tempo_pthreads2);
 
     fclose(ftimes);
     imagem_destruir(img);

@@ -215,3 +215,44 @@ IDENTICOS - OK (com resto)
 exit
 
 Script done on 2026-08-30 18:39:00-03:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2026-08-30 20:26:42-03:00 [TERM="xterm-256color" TTY="/dev/pts/5" COLUMNS="171" LINES="12"]
+[?2004h]0;guilherme@pc: ~/gsg4[01;32mguilherme@pc[00m:[01;34m~/gsg4[00m$ date
+make clean
+make
+date
+./mandelbrot 1000 800 1000 8
+date
+cat times.txt
+[7mecho "--- comparando os 4 arquivos entre si ---"[27m
+[7mdiff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_openmp.pgm && echo "serial=openmp OK"[27m
+[7mdiff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_pthreads1.pgm && echo "serial=pthreads1 OK"[27m
+[7mdiff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_pthreads2.pgm && echo "serial=pthreads2 OK"[27m
+[7mecho "--- edge case: threads > linhas ---"[27m
+[7m./mandelbrot 50 5 300 20[27m[7mdiff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_pthreads2.pgm && echo "OK"[27m[7mecho "--- validacao de erro ---"[27m[7m./mandelbrot[27m[7m./mandelbrot -10 100 100 4[27m[7m./mandelbrot abc 100 100 4[27m[7mexit[27m[A[A[A[A[Aecho "--- comparando os 4 arquivos entre si ---"
+diff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_openmp.pgm && echo "serial=openmp OK"
+diff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_pthreads1.pgm && echo "serial=pthreads1 OK"
+diff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_pthreads2.pgm && echo "serial=pthreads2 OK"
+echo "--- edge case: threads > linhas ---"
+./mandelbrot 50 5 300 20diff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_pthreads2.pgm && echo "OK"echo "--- validacao de erro ---"./mandelbrot./mandelbrot -10 100 100 4./mandelbrot abc 100 100 4exit
+[?2004lSun Aug 30 20:26:50 -03 2026
+rm -f mandelbrot *.pgm times.txt
+gcc -Wall -Wextra -O2 -o mandelbrot mandelbrot.c -fopenmp -pthread -lm
+Sun Aug 30 20:26:50 -03 2026
+Sun Aug 30 20:26:51 -03 2026
+Serial: 0.302510 s
+OpenMP: 0.069180 s
+Pthreads1: 0.110685 s
+Pthreads2: 0.045156 s
+--- comparando os 4 arquivos entre si ---
+serial=openmp OK
+serial=pthreads1 OK
+serial=pthreads2 OK
+--- edge case: threads > linhas ---
+OK
+--- validacao de erro ---
+Uso: ./mandelbrot [largura] [altura] [max_iteracoes] [num_threads]
+Erro: largura invalida '-10'
+Erro: largura invalida 'abc'
+exit
+
+Script done on 2026-08-30 20:26:51-03:00 [COMMAND_EXIT_CODE="1"]

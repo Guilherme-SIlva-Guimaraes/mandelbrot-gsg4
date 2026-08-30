@@ -31,6 +31,7 @@ void imagem_destruir(Imagem *img);
 void calcula_serial(Imagem *img, const Config *cfg);
 void calcula_openmp(Imagem *img, const Config *cfg);
 void calcula_pthreads1(Imagem *img, const Config *cfg);
+void calcula_pthreads2(Imagem *img, const Config *cfg);
 
 int escreve_pgm(const char *caminho, const Imagem *img);
 
