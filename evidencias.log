@@ -148,3 +148,35 @@ Erro: largura invalida 'abc'
 exit
 
 Script done on 2026-08-29 18:25:34-03:00 [COMMAND_EXIT_CODE="1"]
+Script started on 2026-08-30 18:03:37-03:00 [TERM="xterm-256color" TTY="/dev/pts/4" COLUMNS="177" LINES="12"]
+[?2004h]0;guilherme@pc: ~/gsg4[01;32mguilherme@pc[00m:[01;34m~/gsg4[00m$ [7mdate[27m
+[7mmake clean[27m
+[7mmake[27m
+[7mdate[27m
+[7m./mandelbrot 1000 800 1000 8[27m
+[7mdate[27m
+[7mcat times.txt[27m
+[7mecho "--- diff serial vs openmp (deve ser vazio) ---"[27m
+[7mdiff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_openmp.pgm && echo "IDENTICOS - OK"[27m
+[7mexit[27m[A[A[A[A[A[A[A[A[A]0;guilherme@pc: ~/gsg4[01;32mguilherme@pc[00m:[01;34m~/gsg4[00m$ date
+make clean
+make
+date
+./mandelbrot 1000 800 1000 8
+date
+cat times.txt
+echo "--- diff serial vs openmp (deve ser vazio) ---"
+diff mandelbrot_gsg4_serial.pgm mandelbrot_gsg4_openmp.pgm && echo "IDENTICOS - OK"
+exit
+[?2004lSun Aug 30 18:03:45 -03 2026
+rm -f mandelbrot *.pgm times.txt
+gcc -Wall -Wextra -O2 -o mandelbrot mandelbrot.c -fopenmp -pthread -lm
+Sun Aug 30 18:03:50 -03 2026
+Sun Aug 30 18:03:50 -03 2026
+Serial: 0.555646 s
+OpenMP: 0.073569 s
+--- diff serial vs openmp (deve ser vazio) ---
+IDENTICOS - OK
+exit
+
+Script done on 2026-08-30 18:03:50-03:00 [COMMAND_EXIT_CODE="0"]

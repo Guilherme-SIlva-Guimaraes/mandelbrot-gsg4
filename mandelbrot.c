@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <omp.h>
 #include "mandelbrot.h"
 
 void pixel_para_complexo(int px, int py, const Config *cfg,
@@ -56,6 +57,19 @@ void imagem_destruir(Imagem *img) {
 }
 
 void calcula_serial(Imagem *img, const Config *cfg) {
+    for (int py = 0; py < img->altura; py++) {
+        for (int px = 0; px < img->largura; px++) {
+            double cr, ci;
+            pixel_para_complexo(px, py, cfg, &cr, &ci);
+            int it = mandelbrot_iteracoes(cr, ci, cfg->max_iteracoes);
+            img->pixels[py * img->largura + px] =
+                normaliza_intensidade(it, cfg->max_iteracoes);
+        }
+    }
+}
+
+void calcula_openmp(Imagem *img, const Config *cfg) {
+    #pragma omp parallel for num_threads(cfg->num_threads) schedule(dynamic)
     for (int py = 0; py < img->altura; py++) {
         for (int px = 0; px < img->largura; px++) {
             double cr, ci;
@@ -136,6 +150,8 @@ int main(int argc, char *argv[]) {
     }
 
     struct timespec t0, t1;
+
+    /* --- Serial --- */
     clock_gettime(CLOCK_MONOTONIC, &t0);
     calcula_serial(img, &cfg);
     clock_gettime(CLOCK_MONOTONIC, &t1);
@@ -148,8 +164,22 @@ int main(int argc, char *argv[]) {
         fclose(ftimes);
         return 1;
     }
-
     fprintf(ftimes, "Serial: %.6f s\n", tempo_serial);
+
+    /* --- OpenMP --- */
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    calcula_openmp(img, &cfg);
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    double tempo_openmp = (t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) / 1e9;
+
+    char nome_openmp[128];
+    snprintf(nome_openmp, sizeof(nome_openmp), "mandelbrot_%s_openmp.pgm", cfg.login);
+    if (escreve_pgm(nome_openmp, img) != 0) {
+        imagem_destruir(img);
+        fclose(ftimes);
+        return 1;
+    }
+    fprintf(ftimes, "OpenMP: %.6f s\n", tempo_openmp);
 
     fclose(ftimes);
     imagem_destruir(img);

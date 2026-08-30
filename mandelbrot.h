@@ -29,6 +29,7 @@ Imagem *imagem_criar(int largura, int altura);
 void imagem_destruir(Imagem *img);
 
 void calcula_serial(Imagem *img, const Config *cfg);
+void calcula_openmp(Imagem *img, const Config *cfg);
 
 int escreve_pgm(const char *caminho, const Imagem *img);
 

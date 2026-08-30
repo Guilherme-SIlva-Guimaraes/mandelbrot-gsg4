@@ -1,1 +1,0 @@
-# mandelbrot-gsg4
